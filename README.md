@@ -618,6 +618,25 @@ Defining the grain before joins prevents accidental row multiplication and incor
 ---
 
 # 14. Kestra Architecture
+## Orchestration with Kestra
+
+Kestra orchestrates the daily incremental pipeline using a scheduled trigger.
+
+**Schedule:**
+- Cron: `0 12 * * *`
+- Frequency: Every day at 12:00
+
+Flow:
+Scheduled Trigger
+    ↓
+Run incremental pipeline
+    ↓
+Fetch newly available Gold & FX data
+    ↓
+Load into PostgreSQL
+    ↓
+Run dbt transformations
+
 
 Kestra is used as the workflow orchestrator.
 
