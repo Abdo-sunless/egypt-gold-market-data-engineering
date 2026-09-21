@@ -1,0 +1,181 @@
+version: 2
+
+models:
+
+  - name: int_google_trends
+    description: "This model contains the intermediate data for Google Trends, which is used to analyze search interest over time for specific keywords. It aggregates and transforms raw Google Trends data into a structured format suitable for further analysis and reporting."
+    columns:
+      - name: keyword
+        description: "The specific keyword or search term for which the Google Trends data is collected."
+
+      - name: month
+        description: "The month corresponding to the search interest data point."
+
+      - name: interest
+        description: "The normalized search interest value for the keyword on the given month, typically ranging from 0 to 100."
+
+      - name: geo
+        description: "The geographical location (e.g., country or region) associated with the search interest data point."
+
+      - name: batch_id
+        description: "Identifier for the batch of Google Trends data, used to track and manage data collection processes."
+
+
+  - name: int_gold_price_egp
+    description: "This model contains the intermediate data by join exchange rates and gold price to get the gold price in EGP. It transforms raw gold price data into a structured format suitable for further analysis and reporting."
+    columns:
+      - name: date
+        description: "The date corresponding to the gold price data point."
+
+      - name: gold_price_usd
+        description: "The gold price in USD for the given date."
+
+      - name: gold_price_egp
+        description: "The gold price converted to EGP using the exchange rate for the given date."
+
+      - name: usd_egp
+        description: "The exchange rate from USD to EGP on the given date, used for currency conversion."
+
+
+  - name: stg_Gold_price
+    description: "Staging model for daily gold prices received from GoldAPI."
+    columns:
+      - name: date
+        description: "Date of the gold price observation."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: price
+        description: "Gold price in USD for the observation date."
+        data_tests:
+          - not_null
+
+
+  - name: stg_exchange_rates
+    description: "Staging model for foreign exchange rates received from Frankfurter."
+    columns:
+      - name: date
+        description: "Date of the exchange-rate observation."
+        data_tests:
+          - not_null
+
+      - name: base
+        description: "Base currency of the exchange rate."
+        data_tests:
+          - not_null
+
+      - name: quote
+        description: "Quote currency of the exchange rate."
+        data_tests:
+          - not_null
+
+      - name: rate
+        description: "Exchange rate from the base currency to the quote currency."
+        data_tests:
+          - not_null
+
+
+  - name: stg_google_trends
+    description: "Staging model for Google Trends search-interest data for Egypt."
+    columns:
+      - name: date
+        description: "Observation date returned by Google Trends."
+        data_tests:
+          - not_null
+
+      - name: batch_id
+        description: "Identifier of the Google Trends keyword batch used to collect the series."
+        data_tests:
+          - not_null
+
+      - name: geo
+        description: "Geography for the Google Trends observation."
+        data_tests:
+          - not_null
+
+      - name: keyword
+        description: "Google Trends search term represented by the observation."
+        data_tests:
+          - not_null
+
+      - name: interest
+        description: "Google's relative search-interest score; it is not a population percentage."
+        data_tests:
+          - not_null
+
+
+  - name: stg_platform_events
+    description: "Staging model for documented digital-gold platform and product events."
+    columns:
+      - name: platform
+        description: "Name of the digital investment platform or product."
+        data_tests:
+          - not_null
+
+      - name: event_date
+        description: "Date on which the platform or product event occurred."
+        data_tests:
+          - not_null
+
+      - name: country
+        description: "Country associated with the platform or event."
+        data_tests:
+          - not_null
+
+      - name: event_type
+        description: "Type of platform or product event."
+        data_tests:
+          - not_null
+
+      - name: confidence
+        description: "Confidence level assigned to the documented event."
+
+      - name: trend_keyword
+        description: "Google Trends keyword associated with the event when available."
+
+      - name: source
+        description: "Source used to document the event."
+        data_tests:
+          - not_null
+
+      - name: notes
+        description: "Additional notes about the event or its interpretation."
+
+
+  - name: stg_fra_gold_investments
+    description: "Staging model for periodic Egyptian FRA gold-investment fund data."
+    columns:
+      - name: period
+        description: "Reporting period of the FRA observation."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: net_asset_value_egp
+        description: "Net asset value of the gold investment funds in Egyptian pounds."
+        data_tests:
+          - not_null
+
+      - name: investor_accounts
+        description: "Number of investor accounts reported for the period."
+        data_tests:
+          - not_null
+
+      - name: source
+        description: "Source used for the FRA observation."
+        data_tests:
+          - not_null
+  - name: mart_gold_price_monthly
+    description: "Monthly mart for gold prices in Egyptian pounds, used for trend, growth, return, correlation, and lag analysis."
+    columns:
+      - name: month
+        description: "Month representing the monthly gold price observation."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: gold_price_monthly
+        description: "Average daily gold price in Egyptian pounds for the month."
+        data_tests:
+          - not_null

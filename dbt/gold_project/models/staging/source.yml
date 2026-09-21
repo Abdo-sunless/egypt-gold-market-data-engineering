@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: public
+    tables:
+      - name: platform_events
+      - name: gold_prices
+      - name: exchange_rates
+      - name: google_trends
+      - name: fra_gold_investments

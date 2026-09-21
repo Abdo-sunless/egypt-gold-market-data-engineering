@@ -1,0 +1,102 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: pddatabase
+
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: Gold_price
+
+    volumes:
+      - Golden_historical_data:/var/lib/postgresql/data
+    ports:
+    - "5433:5432"
+
+  
+
+    networks:
+      - GD_network
+
+
+  
+  kestra_postgres: # kestra database
+    image: postgres:17
+    volumes:
+      - kestra_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+    networks:
+      - GD_network  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"] # it test if the database is ready to accept connections 
+      interval: 30s #the time between running the check
+      timeout: 10s # the limit of time the check can run before it is considered to have failed
+      retries: 10 # the tries before the container is considered unhealthy
+  kestra:
+    image: kestra/kestra:v1.1
+    pull_policy: always
+    env_file:
+    - .env_encoded
+   
+    
+
+    # Note that this setup with a root user is intended for development purpose.
+    # Our base image runs without root, but the Docker Compose implementation needs root to access the Docker socket
+    # To run Kestra in a rootless mode in production, see: https://kestra.io/docs/installation/podman-compose
+    user: "root"
+    command: server standalone
+    volumes:
+      - kestra_data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - kestra_tmp:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://kestra_postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: k3str4
+        kestra:
+          server:
+            basicAuth:
+              username: "admin@kestra.io" # it must be a valid email address
+              password: Admin1234!
+          repository:
+            type: postgres
+          storage:
+            type: local
+            local:
+              basePath: "/app/storage"
+          queue:
+            type: postgres
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+    ports:
+       - "8081:8080"
+    depends_on:
+      kestra_postgres:
+        condition: service_healthy
+    networks:
+       - GD_network    
+        
+
+volumes:
+  Golden_historical_data: # data for the golden historical data database
+    external: true
+  kestra_postgres_data: # save kestra database like flow,task,execution, etc
+    driver: local
+  kestra_data:  # persistent file storage for Kestra artifacts
+    driver: local
+  kestra_tmp: # temporary working directory for Kestra tasks
+    driver: local
+   
+
+networks:
+  GD_network:
